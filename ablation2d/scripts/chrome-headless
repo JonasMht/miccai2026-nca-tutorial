@@ -1,0 +1,17 @@
+#!/bin/bash
+# Headless Chrome for marp on Ubuntu 23.10+/24.04, where unprivileged user
+# namespaces are restricted by AppArmor and a bare Chrome dies with
+# "No usable sandbox!" on every PDF conversion.
+#
+# Resolves the real binary from $PATH, then the Playwright cache this
+# workstation has Chrome in. CHROME_PATH is deliberately NOT honoured: marp
+# points it at this very wrapper, and a wrapper that execs itself does not
+# terminate.
+CHROME="$(command -v google-chrome || command -v chromium || true)"
+if [ -z "$CHROME" ]; then
+    for c in "$HOME"/.cache/ms-playwright/chromium-*/chrome-linux*/chrome; do
+        [ -x "$c" ] && CHROME="$c" && break
+    done
+fi
+[ -z "$CHROME" ] && { echo "chrome-headless: no Chrome found" >&2; exit 127; }
+exec "$CHROME" --no-sandbox --disable-gpu "$@"

@@ -1,0 +1,61 @@
+{
+ "_what": "Session recipe under the notebook's time budget: 180 s on a TITAN V (about 5 min on a Colab T4), fp16, warmup 2, best epoch selected on val DSC + vessel F1, test split, mean of seeds 0-2. 2026-09-24.",
+ "arms": {
+  "12 ch, lr 3e-3": {
+   "dsc_1x": 0.8216,
+   "vf1_1x": 0.6076,
+   "dsc_8x": 0.8328,
+   "vf1_8x": 0.643,
+   "epochs_run": 17.6667,
+   "seeds": 3
+  },
+  "16 ch, lr 3e-3": {
+   "dsc_1x": 0.8257,
+   "vf1_1x": 0.6242,
+   "dsc_8x": 0.8355,
+   "vf1_8x": 0.6582,
+   "epochs_run": 14,
+   "seeds": 3
+  },
+  "12 ch, lr 3e-3, vessel weight 0.6": {
+   "dsc_1x": 0.8092,
+   "vf1_1x": 0.6611,
+   "dsc_8x": 0.8285,
+   "vf1_8x": 0.6957,
+   "epochs_run": 17.6667,
+   "seeds": 3
+  },
+  "12 ch, lr 7e-3": {
+   "dsc_1x": 0.825,
+   "vf1_1x": 0.6512,
+   "dsc_8x": 0.8381,
+   "vf1_8x": 0.6908,
+   "epochs_run": 17.6667,
+   "seeds": 3
+  },
+  "16 ch, lr 5e-3": {
+   "dsc_1x": 0.8172,
+   "vf1_1x": 0.68,
+   "dsc_8x": 0.8316,
+   "vf1_8x": 0.7259,
+   "epochs_run": 14,
+   "seeds": 3
+  },
+  "12 ch, lr 5e-3, no fire mask (the notebook)": {
+   "dsc_1x": 0.8314,
+   "vf1_1x": 0.7151,
+   "dsc_8x": 0.8314,
+   "vf1_8x": 0.7151,
+   "epochs_run": 18.6667,
+   "seeds": 3
+  },
+  "12 ch, lr 5e-3, fire rate 0.5": {
+   "dsc_1x": 0.8181,
+   "vf1_1x": 0.6738,
+   "dsc_8x": 0.831,
+   "vf1_8x": 0.7122,
+   "epochs_run": 17.6667,
+   "seeds": 3
+  }
+ }
+}

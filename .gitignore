@@ -1,0 +1,32 @@
+# Heavy corpora stay out of git and are re-exportable from data_real + the solver.
+# Exception: what the ablation notebook and its test suite load ships in the
+# repo (~25 MB), so a fresh clone runs on Colab with nothing else to fetch.
+# meta.json (provenance, unused at runtime) and the unused train split of
+# ablation2d/data stay out.
+ablation2d/data/*
+!ablation2d/data/test.npz
+!ablation2d/data/val.npz
+!ablation2d/data/real_slice.npz
+!ablation2d/data/DATASHEET.md
+ablation2d/data_liver/*
+!ablation2d/data_liver/*.npz
+!ablation2d/data_liver/DATASHEET.md
+!ablation2d/data_liver/MASKED
+ablation2d/data_real/
+ablation2d/data_v1/
+ablation2d/data_v2synth/
+ablation2d/data_vessel/
+ablation2d/data_vessel_wide/
+
+# scratch and logs
+__pycache__/
+.ipynb_checkpoints/
+*.pyc
+*.log
+ablation2d/logs/
+ablation2d/logs_*.txt
+ablation2d/slides/_build.md
+
+# OS
+.DS_Store
+ablation2d/figures/

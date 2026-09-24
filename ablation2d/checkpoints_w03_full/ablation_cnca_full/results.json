@@ -1,0 +1,115 @@
+{
+ "config": {
+  "channels": 16,
+  "hidden_mult": 3,
+  "n_sub_models": 3,
+  "fire_rate": 0.5,
+  "restore_conditioning": true,
+  "step_min": 3,
+  "step_max": 18,
+  "infer_steps": 10,
+  "epochs": 80,
+  "batch_size": 16,
+  "lr": 0.002,
+  "lr_min": 1e-05,
+  "warmup_epochs": 5,
+  "weight_decay": 0.0,
+  "further_steps_rate": 0.07,
+  "target_to_seed_rate": 0.0,
+  "persist_range": [
+   40,
+   200
+  ],
+  "persist_bptt": 8,
+  "persist_rate": 0.1,
+  "foreground_weight": 100.0,
+  "vessel_weight": 0.3,
+  "augment_d4": false,
+  "pretrain_epochs": 0,
+  "pretrain_data": "data_vessel",
+  "pretrain_death_weight": 0.0,
+  "vessel_pos_weight": 20.0,
+  "uncertainty_weighting": false,
+  "device": "cuda",
+  "amp_dtype": "bf16",
+  "seed": 0,
+  "validate_every": 5,
+  "grad_norm_eps": 1e-08
+ },
+ "infer_steps": 10,
+ "step_sweep": {
+  "4": 0.7212862992286682,
+  "6": 0.8027096605300903,
+  "8": 0.8327504968643189,
+  "10": 0.8392551040649414,
+  "12": 0.8457417893409729,
+  "14": 0.8471398854255676,
+  "16": 0.8438395166397095,
+  "18": 0.8470343470573425,
+  "20": 0.8461178731918335,
+  "22": 0.8444264364242554,
+  "24": 0.8423920774459839,
+  "26": 0.8443296432495118,
+  "28": 0.8435832452774048,
+  "30": 0.8363985800743103,
+  "32": 0.8377158331871033,
+  "34": 0.8405343675613404,
+  "36": 0.8389017844200134,
+  "38": 0.8403454637527465,
+  "40": 0.8377080011367798
+ },
+ "sphere_baseline": {
+  "C": 1.041956734520404,
+  "ALPHA": 0.31642984975804045,
+  "BETA": 0.23442786040544056,
+  "_fit": "n=319 single-setting cases, log-radius RMSE 0.0877, R2 0.667"
+ },
+ "test": {
+  "C-NCA": {
+   "dice": 0.8475505113601685,
+   "dice_p10": 0.78348708152771,
+   "area_err_cm2": 2.9763500690460205,
+   "area_abs_err_cm2": 3.002049684524536,
+   "recall": 0.9612134099006653,
+   "precision": 0.764453649520874,
+   "n": 800,
+   "vessel_f1": 0.6108250021934509,
+   "vessel_f1_p10": 0.4724563658237457,
+   "vessel_threshold": 0.7
+  },
+  "C-NCA + D4 TTA": {
+   "dice": 0.8619992136955261,
+   "dice_p10": 0.8025078177452087,
+   "area_err_cm2": 2.7009499073028564,
+   "area_abs_err_cm2": 2.7425498962402344,
+   "recall": 0.9638350605964661,
+   "precision": 0.7786403894424438,
+   "n": 800,
+   "vessel_f1": 0.5338445901870728,
+   "vessel_f1_p10": 0.28213831782341003,
+   "vessel_threshold": 0.7
+  },
+  "device-chart sphere": {
+   "dice": 0.7988592386245728,
+   "dice_p10": 0.7203575968742371,
+   "area_err_cm2": 5.00184965133667,
+   "area_abs_err_cm2": 5.029549598693848,
+   "recall": 0.9693565368652344,
+   "precision": 0.678846538066864,
+   "n": 800
+  },
+  "predict zero": {
+   "dice": 0.029999999329447746,
+   "dice_p10": 0.0,
+   "area_err_cm2": -12.892549514770508,
+   "area_abs_err_cm2": 12.892549514770508,
+   "recall": 0.0,
+   "precision": 0.0,
+   "n": 800
+  },
+  "hu threshold (vessel)": {
+   "vessel_f1": 0.2449
+  }
+ },
+ "pretrain_history": []
+}

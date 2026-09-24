@@ -1,0 +1,40 @@
+{
+ "_what": "Random fire mask (p = 0.5) against every cell updating every step, all else identical. Test split; K and vessel threshold chosen on validation. 2026-09-24.",
+ "reference recipe, 240 epochs": {
+  "fire 0.5, seed 0 (the previous reference)": {
+   "dsc_1x": 0.9032,
+   "dsc_8x": 0.9121,
+   "vessel_f1_1x": 0.8043,
+   "vessel_f1_8x": 0.8346
+  },
+  "no fire, seed 0": {
+   "dsc": 0.8856,
+   "vessel_f1": 0.8175
+  },
+  "no fire, seed 1": {
+   "dsc": 0.8441,
+   "vessel_f1": 0.8091
+  },
+  "no fire, seed 2 (the reference now)": {
+   "dsc": 0.9095,
+   "vessel_f1": 0.8261
+  }
+ },
+ "long rollouts, test DSC by K": {
+  "fire 0.5": {
+   "4": 0.851,
+   "10": 0.906,
+   "40": 0.906,
+   "100": 0.89,
+   "400": 0.837
+  },
+  "no fire, seed 2": {
+   "4": 0.907,
+   "10": 0.913,
+   "40": 0.91,
+   "100": 0.906,
+   "400": 0.891
+  }
+ },
+ "_verdict": "Without the fire mask the vessel head is better on every seed and the field holds far better over long rollouts; necrosis DSC varies more between seeds (0.844 to 0.910), so the shipped model is the best of three seeds."
+}

@@ -1,0 +1,28 @@
+{
+ "_what": "Does training the reference recipe longer help? Test split, K and vessel threshold chosen on validation (threshold grid up to 0.95), 2026-09-24.",
+ "shipped, 240 epochs": {
+  "dsc_1x": 0.9046,
+  "dsc_8x": 0.9129,
+  "vessel_f1_1x": 0.806,
+  "vessel_f1_8x": 0.8294
+ },
+ "480 epochs, seed 0": {
+  "dsc_1x": 0.9051,
+  "dsc_8x": 0.9186,
+  "vessel_f1_1x": 0.7983,
+  "vessel_f1_8x": 0.8101
+ },
+ "480 epochs, seed 1": {
+  "dsc_1x": 0.9107,
+  "dsc_8x": 0.9183,
+  "vessel_f1_1x": 0.7927,
+  "vessel_f1_8x": 0.8051
+ },
+ "shipped + 240 epochs at lr 5e-4": {
+  "dsc_1x": 0.9055,
+  "dsc_8x": 0.9118,
+  "vessel_f1_1x": 0.797,
+  "vessel_f1_8x": 0.8173
+ },
+ "_verdict": "at most +0.006 necrosis DSC for -0.01 to -0.02 vessel F1; validation F1 rose while test F1 fell, so doubling the epochs was not worth it."
+}

@@ -1,0 +1,39 @@
+{
+ "hu_threshold_baseline": 0.2261,
+ "arms": {
+  "6ch x2 sub2": {
+   "params": 2616,
+   "hidden_channels": 1,
+   "dice": 0.3018,
+   "vessel_f1": 0.3218,
+   "threshold": 0.5,
+   "min_UNRELIABLE": 11.4
+  },
+  "12ch x2 sub2": {
+   "params": 10416,
+   "hidden_channels": 7,
+   "dice": 0.6583,
+   "vessel_f1": 0.5452,
+   "threshold": 0.7,
+   "min_UNRELIABLE": 21.0
+  },
+  "16ch x3 sub3": {
+   "params": 41616,
+   "hidden_channels": 11,
+   "dice": 0.7063,
+   "vessel_f1": 0.6559,
+   "threshold": 0.7,
+   "min_UNRELIABLE": 51.8
+  },
+  "24ch x3 sub3": {
+   "params": 93528,
+   "hidden_channels": 19,
+   "dice": 0.7342,
+   "vessel_f1": 0.6517,
+   "threshold": 0.7,
+   "min_UNRELIABLE": 94.1
+  }
+ },
+ "_timing_warning": "The per-arm minutes are NOT comparable. All four arms ran back-to-back on carnation, an RTX 1000 Ada Laptop GPU that holds SW Thermal Slowdown continuously under sustained load: 1800-2070 MHz against a 3105 MHz ceiling at 81-83 C. Later arms ran hotter than earlier ones, so the durations measure the cooling as much as the model. The scores are unaffected. Re-measure on an unthrottled GPU before quoting any of these.",
+ "_corpus": "real patient CT, data_real/, patient-level splits 35/5/10"
+}

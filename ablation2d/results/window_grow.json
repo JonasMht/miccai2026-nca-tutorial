@@ -1,0 +1,238 @@
+{
+ "_arch": "fast",
+ "_epochs": 40,
+ "fixed wide (3-18)": {
+  "train_min": 15.0,
+  "K": 12,
+  "test_dice": 0.8361,
+  "test_vessel_f1": 0.7157,
+  "val_dice_epoch_10": 0.8205287098884583,
+  "val_dice_epoch_20": 0.8053907370567321,
+  "best_val_dice": 0.8257
+ },
+ "growing (3 -> 18)": {
+  "train_min": 12.1,
+  "K": 8,
+  "test_dice": 0.8349,
+  "test_vessel_f1": 0.3244,
+  "val_dice_epoch_10": 0.82063325881958,
+  "val_dice_epoch_20": 0.8297813200950622,
+  "best_val_dice": 0.8352,
+  "final_window": [
+   3,
+   13
+  ],
+  "decisions": [
+   {
+    "epoch": 9,
+    "window": [
+     3,
+     7
+    ],
+    "action": "grow",
+    "reason": "best beyond 0.8396 beats best inside 0.8210 by +0.0186 (>= 0.003) for 1 probes",
+    "curve": {
+     "6": 0.8103,
+     "7": 0.821,
+     "9": 0.8386,
+     "11": 0.8396
+    },
+    "best_inside": 0.821,
+    "best_beyond": 0.8396,
+    "margin": 0.003,
+    "streak": 1,
+    "new_window": [
+     3,
+     9
+    ],
+    "vessel_curve": {
+     "6": 0.3151,
+     "7": 0.3227,
+     "9": 0.3329,
+     "11": 0.3389
+    },
+    "vessel_best_inside": 0.3227,
+    "vessel_best_beyond": 0.3389
+   },
+   {
+    "epoch": 14,
+    "window": [
+     3,
+     9
+    ],
+    "action": "grow",
+    "reason": "best beyond 0.7509 beats best inside 0.7432 by +0.0077 (>= 0.003) for 2 probes",
+    "curve": {
+     "8": 0.7432,
+     "9": 0.7412,
+     "11": 0.7504,
+     "13": 0.7509
+    },
+    "best_inside": 0.7432,
+    "best_beyond": 0.7509,
+    "margin": 0.003,
+    "streak": 2,
+    "new_window": [
+     3,
+     11
+    ],
+    "vessel_curve": {
+     "8": 0.3904,
+     "9": 0.3793,
+     "11": 0.3598,
+     "13": 0.346
+    },
+    "vessel_best_inside": 0.3904,
+    "vessel_best_beyond": 0.3598
+   },
+   {
+    "epoch": 19,
+    "window": [
+     3,
+     11
+    ],
+    "action": "hold",
+    "reason": "best inside 0.7715 not beaten by 0.003: beyond peaked at 0.7706, vessel beyond peaked at 0.4973",
+    "curve": {
+     "10": 0.764,
+     "11": 0.7715,
+     "13": 0.769,
+     "15": 0.7706
+    },
+    "best_inside": 0.7715,
+    "best_beyond": 0.7706,
+    "margin": 0.003,
+    "streak": 0,
+    "vessel_curve": {
+     "10": 0.5118,
+     "11": 0.5054,
+     "13": 0.4973,
+     "15": 0.4886
+    },
+    "vessel_best_inside": null,
+    "vessel_best_beyond": null
+   },
+   {
+    "epoch": 24,
+    "window": [
+     3,
+     11
+    ],
+    "action": "grow",
+    "reason": "best beyond 0.8308 beats best inside 0.8277 by +0.0031 (>= 0.003) for 1 probes",
+    "curve": {
+     "10": 0.8245,
+     "11": 0.8277,
+     "13": 0.8266,
+     "15": 0.8308
+    },
+    "best_inside": 0.8277,
+    "best_beyond": 0.8308,
+    "margin": 0.003,
+    "streak": 1,
+    "new_window": [
+     3,
+     13
+    ],
+    "vessel_curve": {
+     "10": 0.7022,
+     "11": 0.6984,
+     "13": 0.7011,
+     "15": 0.6991
+    },
+    "vessel_best_inside": 0.7022,
+    "vessel_best_beyond": 0.7011
+   },
+   {
+    "epoch": 29,
+    "window": [
+     3,
+     13
+    ],
+    "action": "hold",
+    "reason": "best inside 0.8333 not beaten by 0.003: beyond peaked at 0.8321, vessel beyond peaked at 0.6608",
+    "curve": {
+     "12": 0.8333,
+     "13": 0.833,
+     "15": 0.8321,
+     "17": 0.8306
+    },
+    "best_inside": 0.8333,
+    "best_beyond": 0.8321,
+    "margin": 0.003,
+    "streak": 0,
+    "vessel_curve": {
+     "12": 0.662,
+     "13": 0.6627,
+     "15": 0.6608,
+     "17": 0.6583
+    },
+    "vessel_best_inside": null,
+    "vessel_best_beyond": null
+   },
+   {
+    "epoch": 34,
+    "window": [
+     3,
+     13
+    ],
+    "action": "hold",
+    "reason": "best inside 0.8294 not beaten by 0.003: beyond peaked at 0.8291, vessel beyond peaked at 0.6668",
+    "curve": {
+     "12": 0.8294,
+     "13": 0.8292,
+     "15": 0.8291,
+     "17": 0.8254
+    },
+    "best_inside": 0.8294,
+    "best_beyond": 0.8291,
+    "margin": 0.003,
+    "streak": 0,
+    "vessel_curve": {
+     "12": 0.6667,
+     "13": 0.6672,
+     "15": 0.6668,
+     "17": 0.666
+    },
+    "vessel_best_inside": null,
+    "vessel_best_beyond": null
+   },
+   {
+    "epoch": 39,
+    "window": [
+     3,
+     13
+    ],
+    "action": "hold",
+    "reason": "best inside 0.8283 not beaten by 0.003: beyond peaked at 0.8266, vessel beyond peaked at 0.6786",
+    "curve": {
+     "12": 0.8283,
+     "13": 0.8281,
+     "15": 0.8266,
+     "17": 0.825
+    },
+    "best_inside": 0.8283,
+    "best_beyond": 0.8266,
+    "margin": 0.003,
+    "streak": 0,
+    "vessel_curve": {
+     "12": 0.6795,
+     "13": 0.6793,
+     "15": 0.6786,
+     "17": 0.6781
+    },
+    "vessel_best_inside": null,
+    "vessel_best_beyond": null
+   }
+  ]
+ },
+ "fixed narrow (3-10)": {
+  "train_min": 10.8,
+  "K": 10,
+  "test_dice": 0.831,
+  "test_vessel_f1": 0.701,
+  "val_dice_epoch_10": 0.7896116876602173,
+  "val_dice_epoch_20": 0.80664076089859,
+  "best_val_dice": 0.8283
+ }
+}

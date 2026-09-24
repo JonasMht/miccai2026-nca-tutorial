@@ -1,0 +1,33 @@
+{
+ "_arch": "fast",
+ "_epochs": 40,
+ "_seeds": 1,
+ "all channels": {
+  "val_dice": 0.8203,
+  "seeds": [
+   0.8203
+  ],
+  "spread": 0.0
+ },
+ "drop hounsfield": {
+  "val_dice": 0.7033,
+  "seeds": [
+   0.7033
+  ],
+  "spread": 0.0
+ },
+ "drop needle": {
+  "val_dice": 0.7621,
+  "seeds": [
+   0.7621
+  ],
+  "spread": 0.0
+ },
+ "drop applicator_activation": {
+  "val_dice": 0.1335,
+  "seeds": [
+   0.1335
+  ],
+  "spread": 0.0
+ }
+}

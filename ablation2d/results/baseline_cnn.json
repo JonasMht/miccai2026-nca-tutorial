@@ -1,0 +1,17 @@
+{
+ "dice": 0.9119144082069397,
+ "dice_p10": 0.8506556749343872,
+ "area_err_cm2": 1.3057966232299805,
+ "area_abs_err_cm2": 1.6438498497009277,
+ "recall": 0.9776090383529663,
+ "precision": 0.8619540333747864,
+ "n": 659,
+ "params": 40340,
+ "reach_cells": 127,
+ "train_min": 15.8,
+ "vessel_f1": 0.8043,
+ "vessel_threshold": 0.97,
+ "epochs": 240,
+ "corpus": "data_liver",
+ "test": "plans with at most two needles"
+}

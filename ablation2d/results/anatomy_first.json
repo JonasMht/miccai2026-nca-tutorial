@@ -1,0 +1,25 @@
+{
+ "_what": "Session recipe (12 channels, lr 5e-3, EMA 0.99, plans with at most two needles), 180 s on a TITAN V. Test plans with at most two needles. Vessel recall inside the true lesion, in an 8 mm ring outside it, and further away. 2026-09-24.",
+ "single rollout (seeds 0-1)": {
+  "dsc": 0.8469,
+  "vessel_f1": 0.7184,
+  "vessel_recall_in_lesion": 0.0011,
+  "vessel_recall_ring_outside": 0.2836,
+  "vessel_recall_far": 0.7488,
+  "vessel_f1_random": 0.6907,
+  "dsc_K40": 0.69,
+  "epochs": 23,
+  "seeds": 2
+ },
+ "anatomy first, 6 CT-only steps (seeds 0-2)": {
+  "dsc": 0.8331,
+  "vessel_f1": 0.7689,
+  "vessel_recall_in_lesion": 0.5502,
+  "vessel_recall_ring_outside": 0.598,
+  "vessel_recall_far": 0.7829,
+  "vessel_f1_random": 0.7689,
+  "dsc_K40": 0.8323,
+  "epochs": 14,
+  "seeds": 3
+ }
+}
