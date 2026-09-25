@@ -606,9 +606,11 @@ with torch.no_grad():
 condition on a tumour mask and report the margin; put the surrogate inside an
 optimiser and search for the plan, which is what the 3-D version does.
 
-**Reading:** Mordvintsev et al., *Growing Neural Cellular Automata* (Distill
-2020) · Kalkhof et al., *Med-NCA* (IPMI 2023) · Pennes (1948) · Lu et al.,
-*AJR* (2002) on the vessel heat sink.
+**Reading:** Mehtali, Verde & Essert, *C-NCA* (MICCAI 2025) — the paper behind
+this hands-on · Mehtali, Verde & Essert, *Heat* (IJCARS 2025) — the 3-D solver
+that made the labels · Mordvintsev et al., *Growing Neural Cellular Automata*
+(Distill 2020) · Kalkhof, González & Mukhopadhyay, *Med-NCA* (IPMI 2023, TU
+Darmstadt) · Pennes (1948) · Lu et al., *AJR* (2002) on the vessel heat sink.
 
 Code, both notebooks and the slides: {REPO}"""),
 ]
