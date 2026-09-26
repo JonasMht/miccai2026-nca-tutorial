@@ -1,5 +1,5 @@
 {
- "_what": "one training iteration of the session recipe (12 channels, 2 sub-models, K = 7, batch 16), median of 30 after 5 warm-up; scratchpad bench_iter.py, 2026-09-23",
+ "_what": "one training iteration of the session recipe (12 channels, 2 sub-models, K = 7, batch 16), median of 30 after 5 warm-up, 2026-09-23",
  "_why": "torch.cuda.is_bf16_supported() is True on pre-Ampere cards because bf16 can be emulated; train.py used to trust it",
  "TITAN V (sm_70, a T4-class card)": {"fp32_ms": 39.3, "fp16_ms": 35.4, "bf16_ms": 1277.4},
  "RTX 3080 Ti (sm_86)": {"fp32_ms": 28.9, "fp16_ms": 30.4, "bf16_ms": 27.6},

@@ -63,6 +63,12 @@ def png(fig, dpi=110) -> str:
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+def media(name):
+    """An image from slides/media/, inlined so the deck stays one file."""
+    kind = "jpeg" if name.endswith(".jpg") else name.rsplit(".", 1)[-1]
+    return f"data:image/{kind};base64," + base64.b64encode((OUT / "media" / name).read_bytes()).decode()
+
+
 def f3(x):
     return f"{x:.3f}" if x is not None else MISSING
 
@@ -114,18 +120,31 @@ def chart_rollout_strip():
     tip = (float(np.median(xs)) * 2 - 6, float(np.median(ys)) * 2 - 20)
     plan = Plan([Needle(tip[0], tip[1], tip[0] + 10, 0.0, 90.0, FIXED_DURATION_S)])
     x = torch.from_numpy(build_inputs(anat, plan, mask_ct=True))[None]
-    torch.manual_seed(3)
+    # both phases: the anatomy steps (CT only, vessels forming; the necrosis
+    # channel is unsupervised there, so it is not drawn), then the heating steps
+    frames = []
     with torch.no_grad():
-        _, trace = model(x, steps=12, return_trace=True)
+        ct_only = x.clone()
+        ct_only[:, 1:] = 0
+        s = model.seed(ct_only)
+        for k in range(model.anatomy_steps):
+            s = model.step(s)
+            s = torch.cat([s[:, :2], ct_only, s[:, 5:]], 1)
+            frames.append((f"anatomy {k + 1}", model.readout(s)[0].numpy(), False))
+        _, trace = model(x, steps=cfg.infer_steps, return_trace=True)
+        frames += [(f"heating {k + 1}", f[0].numpy(), True) for k, f in enumerate(trace)]
+    pick = [frames[i] for i in (1, 2, model.anatomy_steps - 1)] + \
+        [frames[model.anatomy_steps + i] for i in (0, 1, cfg.infer_steps - 1)]
     hu = anat.hounsfield
     fig, ax = plt.subplots(1, 6, figsize=(15, 2.7))
-    for a, k in zip(ax, (1, 2, 3, 5, 7, 11)):
-        f = trace[k][0].numpy()
+    for a, (title, f, heat) in zip(ax, pick):
         a.imshow(hu, cmap="gray", vmin=20, vmax=220)
-        a.imshow(np.ma.masked_less(f[1], 0.6), cmap=VESSELS, vmin=0, vmax=1)
-        a.imshow(np.ma.masked_less(f[0], 0.35), cmap=NECROSIS, vmin=0, vmax=1)
+        v = np.clip((f[1] - 0.3) / 0.4, 0, 1)
+        a.imshow(np.full(hu.shape, 0.7), cmap=VESSELS, vmin=0, vmax=1, alpha=v)
+        if heat:
+            a.imshow(np.ma.masked_less(f[0], 0.35), cmap=NECROSIS, vmin=0, vmax=1)
         a.set_xlim(20, 100); a.set_ylim(95, 15)
-        a.set_title(f"step {k + 1}", fontsize=14, color="#555")
+        a.set_title(title, fontsize=14, color=BLUE if not heat else ORANGE)
         a.axis("off")
     fig.subplots_adjust(wspace=0.04)
     return png(fig, dpi=120)
@@ -139,12 +158,16 @@ def chart_persistence():
                           ("with_persistence", "+ persistence", ORANGE)):
         d = STAB[key]["dice_by_k"]
         ks = [int(k) for k in d]
-        ax.plot(ks, list(d.values()), "-o", color=col, lw=3, ms=6, label=lab)
+        ax.plot(ks, list(d.values()), "-o", color=col, lw=3, ms=6)
+        # label each curve at its right end instead of a legend over the data
+        ax.annotate(lab, (ks[-1], list(d.values())[-1]), xytext=(0, 12 if col == ORANGE else -24),
+                    textcoords="offset points", ha="right", fontsize=16, color=col,
+                    fontweight="bold")
     ax.axvspan(3, 10, color="#e9ecef", zorder=-1)
-    ax.text(5.5, 0.855, "trained\non 3-10", ha="center", va="top", fontsize=14, color="#666")
+    ax.text(5.5, 0.615, "trained\non 3-10", ha="center", va="bottom", fontsize=14, color="#666")
     ax.set_xscale("log"); ax.set_xticks([4, 10, 30, 100, 400]); ax.set_xticklabels([4, 10, 30, 100, 400])
     ax.set_xlabel("rollout steps at inference"); ax.set_ylabel("validation DSC")
-    ax.set_ylim(0.6, 0.87); ax.legend(frameon=False, loc="lower center", bbox_to_anchor=(0.62, 0.02))
+    ax.set_ylim(0.6, 0.87)
     return svg(fig)
 
 
@@ -286,13 +309,16 @@ def build():
 
     slide("", f"""
       <div class="kicker">MICCAI 2026 · Learning to Self-Organize · Tips for training</div>
-      <h1 class="big">Training NCAs:<br>what actually moved the numbers</h1>
+      <h1 class="big">Training NCAs:<br>what helped, and what didn't</h1>
       <img class="strip" src="{chart_rollout_strip()}">
       <div class="who"><b>Jonas Mehtali</b> · University of Strasbourg / ICube</div>
-      <div class="muted">Every number in this talk was measured on the task of the next 30 minutes:
-      a CT slice and a needle in, necrosis and vessels out, with a {PARAMS:,}-parameter reference model.</div>""",
-          "One line: these are the tricks nobody puts in the method section, each one measured on "
-          "one model, the one from Caroline's talk that you train right after this.", 20, "title")
+      <div class="muted">All the numbers in this talk come from the model you will train in the
+      hands-on: a CT slice and a needle go in, the burn and the vessels come out. The reference
+      model has {PARAMS:,} parameters.</div>""",
+          "Quick intro. These are the things that never make it into a methods section, and each "
+          "one was measured on the same model, the one you will train right after this. The strip "
+          "shows it at work: first it finds the vessels from the CT alone, then the needle is "
+          "switched on and the burn grows.", 20, "title")
 
     slide("Why an NCA is harder to train than a CNN", """
       <div class="cols">
@@ -316,10 +342,11 @@ def build():
           </ul>
         </div>
       </div>
-      <p class="punch">Shared weights, unrolled many times, no normalisation, no global view.
-      Every trick that follows is about that.</p>""",
-          "Say the last sentence slowly. Gradients flow through every step of the rollout, and "
-          "small errors compound geometrically. Everything after this slide is a way to tame that.",
+      <p class="punch">One small set of weights, applied over and over, with no normalisation
+      and no view of the whole image. Most of what follows comes back to that.</p>""",
+          "Take your time on the last sentence. The gradient goes back through every step of the "
+          "rollout, so small errors pile up step after step. The rest of the talk is mostly ways "
+          "to keep that under control.",
           50)
 
     slide("Two fixes that cost two lines each", f"""
@@ -331,8 +358,9 @@ nn.init.zeros_(block[-1].weight)
 
 p = model(x, steps=20)          # untrained
 assert float(p.max() - p.min()) == 0.0''')}
-          <p>The untrained rule is the identity, so training starts from "do no harm". The
-          assert catches a wrong state layout in two seconds, before you train.</p>
+          <p>Before training, the rule does nothing, so the model starts from a safe place.
+          If the output is not flat, your state layout is wrong, and you find out in two
+          seconds instead of after an hour of training.</p>
         </div>
         <div>
           <h3>Normalise gradients per parameter</h3>
@@ -342,12 +370,13 @@ for p in model.parameters():
     p.grad /= p.grad.norm() + 1e-8
 clip_grad_norm_(model.parameters(), 1.0)
 opt.step()''')}
-          <p>Through a long rollout, gradient norms differ by orders of magnitude between
-          layers and change every batch. A global clip keeps the bad ratio.</p>
+          <p>After a long rollout, some layers get gradients orders of magnitude larger than
+          others, and it changes from batch to batch. Clipping the global norm does not fix
+          that imbalance.</p>
         </div>
       </div>""",
-          "Both are in the notebook: the flat-output assert is TODO 4. Per-parameter normalisation "
-          "is TRICK 3 in train.py.", 50)
+          "Both of these are in the notebook. The flat-output check is TODO 4, and the "
+          "per-parameter normalisation is marked TRICK 3 in train.py.", 50)
 
     slide("Sample the rollout length, then teach it to stay", f"""
       <div class="cols wide-left">
@@ -361,15 +390,16 @@ loss = L(pred, y)
 # sometimes: keep going
 state = model(x, 150, state).detach()
 loss += L(model(x, 6, state), y)''')}
-          <p>A fixed K teaches a choreography that ends at step K. Sampling K forces a fixed
-          point, and supervising a second, longer stretch of the same rollout makes it hold.</p>
+          <p>Train with a fixed K and the model learns a routine that ends at step K. Vary K and
+          it has to settle into a stable state. Now and then, let it run much longer and check
+          it again, so it learns to stay there.</p>
           <p class="num">DSC at 400 steps: <b>{f3(k400("without_persistence"))}</b> →
           <b class="o">{f3(k400("with_persistence"))}</b></p>
         </div>
       </div>""",
-          "Point at the grey curve: it was trained on 3 to 10 steps and falls apart past 20. The "
-          "orange one holds to 400. Only the last 6 steps of the long stretch carry a gradient, so "
-          "memory stays flat. The planner in the notebook depends on this.", 60)
+          "Look at the grey curve. It was trained on 3 to 10 steps and falls apart after about 20. "
+          "The orange one still holds at 400. Only the last 6 steps of the long run get a "
+          "gradient, so memory does not grow. The live planner in the notebook relies on this.", 60)
 
     slide("Keep the environment out of the model's reach", f"""
       <div class="chan">
@@ -377,86 +407,93 @@ loss += L(model(x, 6, state), y)''')}
         <span class="c e">CT</span><span class="c e">needle</span><span class="c e">power</span>
         {''.join('<span class="c s"></span>' for _ in range(11))}
       </div>
-      <div class="chan-lbl"><span>answers</span><span>environment, rewritten every step</span><span>scratch</span></div>
+      <div class="chan-lbl"><span>answers</span><span>inputs, restored every step</span><span>scratch</span></div>
       <div class="cols">
         <div>{code_block('''
 for _ in range(steps):
     x = step(x)
-    x = cat([x[:, :2], inputs, x[:, 5:]], 1)''')}</div>
+    x = cat([x[:, :2], inputs, x[:, 5:]], 1)''')}
+          <figure class="real"><img src="{media("liver_3d_two_needles.jpg")}">
+          <figcaption>The 3-D setting: two needles, the liver vessels, and the solver's
+          ablation zone around the tumour.</figcaption></figure></div>
         <div>
-          <p>Let the model overwrite its inputs and it will. In our 3-D model, which did not
-          restore them, the power channel drifted to <b>7 630×</b> its own mean and the needle to
-          <b>75×</b>: the plan was simply erased.</p>
-          <p>Restoring costs three channels, and it is what lets you <b>move a needle
-          mid-rollout</b> and watch the field follow.</p>
+          <p>If the model can overwrite its inputs, it will. Our 3-D model did not restore them,
+          and the power channel ended up at <b>7&nbsp;630×</b> its normal value, the needle at
+          <b>75×</b>. The plan was basically gone.</p>
+          <p>Writing them back every step is one line, and it is what lets you <b>move a needle
+          mid-rollout</b> and watch the burn follow.</p>
         </div>
       </div>""",
-          "The drift numbers come from the 3-D surrogate of my PhD codebase, which did not restore "
-          "its conditioning. Sparse channels, the plan, are the ones that get erased. The payoff is "
-          "the live planner in the hands-on.", 60)
+          "The drift numbers are from the 3-D surrogate in my PhD code, which did not restore its "
+          "inputs. The sparse channels, the needle and the power, are the ones that vanish first. "
+          "The picture is that 3-D setting, rendered from the solver. You will see the payoff in "
+          "the live planner.", 60)
 
     slide("Scratch channels are where the model computes", f"""
       <div class="cols wide-left">
         <div class="chart">{chart_capacity()}</div>
         <div>
-          <p>Subtract what is spoken for: 2 answers and 3 environment channels. A 6-channel model
-          has <b>one</b> channel left to think in.</p>
-          <p>Both heads rise <b>together</b> as you add width. That is two tasks competing for
-          memory, not for gradient, and no loss weighting can buy a channel.</p>
-          <p class="muted">Same budget per arm, real CT, before the loss fix on the next slide.</p>
+          <p>Two channels hold the answers and three hold the inputs. A 6-channel model has
+          just <b>one</b> channel left to think with.</p>
+          <p>Add width and both outputs improve <b>together</b>. The two tasks were fighting
+          over memory, not over the gradient, and no loss weighting gives you a spare channel.</p>
+          <p class="muted">Same training budget for each, real CT, before the loss fix on the
+          next slide.</p>
         </div>
       </div>""",
-          "Everything we tried on the loss first left the vessel head pinned. Width moved both "
-          "heads at once. 16 channels is the knee; 24 buys little.", 50)
+          "Everything I tried on the loss first left the vessel output stuck. Adding width moved "
+          "both outputs at once. 16 channels is where it levels off, and 24 adds very little.", 50)
 
     slide("Check the share, not the weight", f"""
       <div class="chart wide">{chart_share()}</div>
       <div class="cols">
         <div>{code_block('''
 loss = necrosis_loss + w * vessel_loss''')}
-          <p><code>w = 3.0</code> was set while fighting a stuck vessel head and never revisited.
-          The necrosis head got 3 % of the loss.</p>
+          <p>I set <code>w = 3.0</code> while fighting a stuck vessel output and never went back
+          to it. The necrosis output ended up with 3&nbsp;% of the loss.</p>
         </div>
         <div>
           <p class="num">val DSC at epoch 10<br><b>0.46</b> → <b class="o">0.79</b></p>
-          <p>Same data, same budget, one number. Print each term's share whenever a loss
-          changes form.</p>
+          <p>Same data, same budget, only that number changed. Whenever you change a loss,
+          print how much each term contributes.</p>
         </div>
       </div>""",
-          "This was one of the largest effects in the whole project and it was a hyperparameter "
-          "nobody looked at. In the notebook the room prints these shares on their own model.", 60)
+          "This was one of the biggest effects in the whole project, and it came from a "
+          "hyperparameter nobody looked at. In the notebook, everyone prints these shares for "
+          "their own model.", 60)
 
     slide("Two knobs that are free after training", f"""
       <div class="cols">
         <div><h3>Rollout length K</h3><div class="chart">{chart_k_sweep()}</div>
-          <p>Pick on validation; take the cheapest within 1 % of the best.</p></div>
+          <p>Choose it on validation: the smallest K within 1&nbsp;% of the best (dashed line).</p></div>
         <div><h3>Decision threshold</h3><div class="chart">{chart_threshold()}</div>
-          <p>Our search stopped at 0.7. The optimum was higher:
-          <b>+{f3(thr_gain) if thr_gain is not None else MISSING}</b> vessel F1 for free.</p></div>
+          <p>Our search stopped at 0.7, but the best value was higher. That is
+          <b>+{f3(thr_gain) if thr_gain is not None else MISSING}</b> vessel F1 without retraining.</p></div>
       </div>""",
-          "K: the cheapest within 1 % of the best, chosen on validation, never on test. "
-          "The threshold one is fresh: we reported the vessel head at a grid edge for weeks. "
-          "The weighted BCE makes the head over-confident, so its best threshold is high.", 60)
+          "For K, take the smallest one within 1 % of the best, chosen on validation, never on "
+          "test. The threshold one is recent: for weeks we reported the vessel output at the edge "
+          "of the search grid. The weighted loss makes that output over-confident, so its best "
+          "threshold ends up high.", 60)
 
-    slide("Things we measured wrong", f"""
+    slide("Things that did not work for us", f"""
       <div class="tiles">
         <div class="tile"><div class="t">Rotations and flips looked free</div>
           <div class="v">vessel F1 {f3(d4_off_f1)} → <b class="o">{f3(d4_f1)}</b></div>
-          <p>The heat equation has the symmetry. Axial CT does not: the liver is on the right.</p></div>
+          <p>The heat equation does not care about orientation, but axial CT does: the liver is always on the right.</p></div>
         <div class="tile"><div class="t">"bf16 supported" on a T4-class GPU</div>
           <div class="v"><b class="o">{(amp.get("bf16_ms", 0) / amp.get("fp32_ms", 1)):.0f}×</b> slower per batch</div>
-          <p>It is emulated. Ask for the compute capability, not <code>is_bf16_supported()</code>.</p></div>
+          <p>It is emulated on older cards. Check the compute capability instead of trusting <code>is_bf16_supported()</code>.</p></div>
         <div class="tile"><div class="t">A random fire mask</div>
           <div class="v">vessel F1 {f3(fire_f1)} → <b class="o">{f3(nofire_f1)}</b> without it</div>
-          <p>The classic Growing-NCA trick. Here updating every cell every step trained better, and the model is deterministic.</p></div>
+          <p>The classic Growing-NCA trick. Here, updating every cell at every step trained better, and the result is deterministic.</p></div>
         <div class="tile"><div class="t">A vessel-only warm start</div>
           <div class="v">learned vessels <b class="o">½</b> as fast</div>
-          <p>Per gradient step, against training both heads together. Necrosis helps the vessels.</p></div>
+          <p>Compared with training both outputs from the start. Learning the burn seems to help it find the vessels.</p></div>
       </div>
-      <p class="punch">Change one variable at a time, and measure the trick before you keep it.</p>""",
-          "Pick two aloud: augmentation, and the bf16 one because it silently hit the Colab runs "
-          "of this very notebook until this week. The fire mask is the one people will ask about: "
-          "same 5-minute budget, three seeds each, necrosis DSC 0.818 to 0.831 as well.", 70)
+      <p class="punch">Change one thing at a time, and measure a trick before you keep it.</p>""",
+          "Talk through two of them: augmentation, and bf16, because it quietly slowed down the "
+          "Colab runs of this exact notebook until recently. People will ask about the fire mask: "
+          "same 5-minute budget, three seeds each, and necrosis DSC also went from 0.818 to 0.831.", 70)
 
     af = load("anatomy_first.json") or {}
     af1 = af.get("single rollout (seeds 0-1)", {})
@@ -465,18 +502,19 @@ loss = necrosis_loss + w * vessel_loss''')}
       <div class="cols wide-left">
         <div class="chart">{chart_anatomy()}</div>
         <div>
-          <p>The vessels do not depend on the needle, but a model that sees the plan
-          while looking for them learns that <b>inside a lesion there are no vessels</b>.</p>
-          <p>So: a few steps on the CT alone, then switch the needle on and hold the vessel
-          channel fixed, like the CT. Same rule, same weights.</p>
+          <p>The vessels do not depend on the needle. But a model that sees the plan while
+          looking for them learns a shortcut: <b>inside a burn, there are no vessels</b>.</p>
+          <p>So we run a few steps on the CT alone, then switch the needle on and freeze the
+          vessel channel, just like the CT. Same rule, same weights.</p>
           <p class="num">vessel F1 with random plans<br><b>{f3(af1.get("vessel_f1_random"))}</b> →
           <b class="b">{f3(af2.get("vessel_f1_random"))}</b></p>
+          <p class="muted">Measured with the notebook's 5-minute recipe, 2 to 3 seeds, test plans.</p>
         </div>
       </div>""",
-          "This came out of a robustness audit this week: move the needle and the vessel map "
-          "changed. Pinning the necrosis channel alone was not enough, the plan leaks through the "
-          "scratch channels. The general rule: whatever must not depend on an input, compute it "
-          "before that input exists, then treat it as environment.", 55)
+          "This came out of a robustness check: move the needle and the vessel map changed. "
+          "Freezing the necrosis channel alone was not enough, because the plan leaked in through "
+          "the scratch channels. The general idea: if something must not depend on an input, "
+          "compute it before that input exists, then treat it as part of the environment.", 55)
 
     from ablation2d.anatomy import from_segmentations
     from ablation2d.data import AblationDataset
@@ -497,8 +535,9 @@ loss = necrosis_loss + w * vessel_loss''')}
         <div class="live">{planner}</div>
         <div class="qr">{qr}<p>Open in Colab<br><span class="muted">github.com/JonasMht/<br>miccai2026-nca-tutorial</span></p></div>
       </div>""",
-          "This is the model running live in the browser. Drag the needle next to a vessel: the "
-          "lesion is notched. Then: scan the code, T4 GPU, run the first cell.", 50, "handover-slide")
+          "This is the model running live in the browser. Drag the needle next to a vessel and "
+          "the burn gets a notch where the vessel carries the heat away. Then: scan the code, "
+          "pick a T4 GPU, and run the first cell.", 50, "handover-slide")
     return slides
 
 
@@ -540,9 +579,9 @@ b.o{color:#d9480f} b.b{color:#1c7ed6}
 .blk.c0{background:#4dabf7}.blk.c1{background:#74c0fc}.blk.c2{background:#339af0}.blk.c3{background:#a5d8ff}
 .blk.same{background:#ff922b}
 .chan{display:flex;gap:6px;margin:6px 0 4px}
-.chan .c{height:92px;flex:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;color:white}
+.chan .c{height:72px;flex:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;color:white}
 .chan .a{background:#d9480f;flex:1.6}.chan .e{background:#495057;flex:1.4}.chan .s{background:#dee2e6}
-.chan-lbl{display:grid;grid-template-columns:3.2fr 4.2fr 11fr;font-size:23px;color:#6b6f76;margin-bottom:34px}
+.chan-lbl{display:grid;grid-template-columns:3.2fr 4.2fr 11fr;column-gap:6px;font-size:22px;color:#6b6f76;margin-bottom:34px;white-space:nowrap}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:30px 40px}
 .tile{background:#f1f3f5;border-radius:12px;padding:24px 30px}
 .tile .t{font-size:29px;font-weight:700;margin-bottom:6px}
@@ -553,6 +592,8 @@ b.o{color:#d9480f} b.b{color:#1c7ed6}
 .handover .qr{margin-left:auto;text-align:center;width:250px;flex:none}
 .handover .qr svg{width:240px;height:240px}
 .handover .qr p{font-size:22px;margin-top:10px}
+.real{margin:0}.real img{width:100%;max-height:265px;object-fit:cover;border-radius:10px;display:block}
+.real figcaption{font-size:20px;color:#6b6f76;margin-top:8px;line-height:1.35}
 .missing{color:#c92a2a;font-style:italic}
 #bar{position:absolute;left:0;bottom:0;height:5px;background:#d9480f;transition:width .25s}
 #pn{position:fixed;right:18px;bottom:14px;color:#888;font-size:14px}
@@ -617,16 +658,17 @@ def main():
     for n, s in enumerate(slides, 1):
         lines += [f"**{n}. {s['title'] or 'Title'}** ({s['seconds']} s)", "", s["notes"], ""]
     lines += ["## Questions to expect", "",
-              "- *Is this validated?* No. The device calibration behind every label is provisional: "
-              "ex vivo bovine liver at 17 °C, held-out error 9.9 %.",
-              "- *Why 2-D?* Because it trains in five minutes on a free GPU. The 3-D model uses the "
-              "same channels, device and loss.",
-              "- *Could I use it clinically?* No: a 2-D surrogate of a provisionally calibrated solver.",
-              "- *Two phases, is that still one NCA?* Yes: same rule, same weights, run first with the "
-              "needle channels empty and then with them on. It is the environment trick applied to an "
-              "output: whatever must not depend on an input is computed before that input exists.",
-              "- *Why no fire mask?* Measured: without it both heads are better in the same budget and "
-              "the model is deterministic, so one rollout is the answer.",
+              "- *Is this validated?* No. The device calibration behind the labels is still "
+              "provisional (ex vivo bovine liver at 17 °C, 9.9 % error on held-out data).",
+              "- *Why 2-D?* So it trains in five minutes on a free GPU. The 3-D model uses the same "
+              "channels, device and loss.",
+              "- *Could I use it clinically?* No. It is a 2-D surrogate of a solver whose calibration "
+              "is still provisional.",
+              "- *Two phases, is that still one NCA?* Yes. Same rule, same weights: it runs first with "
+              "the needle channels empty, then with them on. It is the environment trick applied to "
+              "an output.",
+              "- *Why no fire mask?* We measured it. Without it both outputs are better for the same "
+              "budget, and the model is deterministic, so a single rollout is enough.",
               ""]
     (OUT / "speaker_notes.md").write_text("\n".join(lines))
     print(f"wrote slides/tips_and_tricks_nca.html ({len(slides)} slides, {total // 60}:{total % 60:02d})")

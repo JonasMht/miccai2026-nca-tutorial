@@ -508,7 +508,7 @@ one = report(model, data["test"], steps=K, vessel_threshold=vthr,
 table = pd.DataFrame({"your model": row(one["C-NCA"]),
                       "device-chart sphere": row(one["device chart"]),
                       "best HU threshold": {"vessel F1": hu_threshold_vessel_f1(data["test"])}}).T
-table.style.format(precision=3, na_rep="")"""),
+table.astype(float).round(3).fillna("")"""),
 
     md(f"""**Read recall against precision.** Recall above precision means the model
 over-predicts the zone, which is what the 100 : 1 weighting asked for. The

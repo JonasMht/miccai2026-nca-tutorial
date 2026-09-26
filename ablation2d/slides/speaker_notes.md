@@ -15,7 +15,7 @@ Press **P** in the deck for these notes with a per-slide timer; **F** for full s
 | 6 | Scratch channels are where the model computes | 50 | 4:50 |
 | 7 | Check the share, not the weight | 60 | 5:50 |
 | 8 | Two knobs that are free after training | 60 | 6:50 |
-| 9 | Things we measured wrong | 70 | 8:00 |
+| 9 | Things that did not work for us | 70 | 8:00 |
 | 10 | Freeze what the plan must not touch | 55 | 8:55 |
 | 11 | Hands-on 3: train one in five minutes | 50 | 9:45 |
 
@@ -23,52 +23,52 @@ Total 9:45 of 10:00.
 
 **1. Title** (20 s)
 
-One line: these are the tricks nobody puts in the method section, each one measured on one model, the one from Caroline's talk that you train right after this.
+Quick intro. These are the things that never make it into a methods section, and each one was measured on the same model, the one you will train right after this. The strip shows it at work: first it finds the vessels from the CT alone, then the needle is switched on and the burn grows.
 
 **2. Why an NCA is harder to train than a CNN** (50 s)
 
-Say the last sentence slowly. Gradients flow through every step of the rollout, and small errors compound geometrically. Everything after this slide is a way to tame that.
+Take your time on the last sentence. The gradient goes back through every step of the rollout, so small errors pile up step after step. The rest of the talk is mostly ways to keep that under control.
 
 **3. Two fixes that cost two lines each** (50 s)
 
-Both are in the notebook: the flat-output assert is TODO 4. Per-parameter normalisation is TRICK 3 in train.py.
+Both of these are in the notebook. The flat-output check is TODO 4, and the per-parameter normalisation is marked TRICK 3 in train.py.
 
 **4. Sample the rollout length, then teach it to stay** (60 s)
 
-Point at the grey curve: it was trained on 3 to 10 steps and falls apart past 20. The orange one holds to 400. Only the last 6 steps of the long stretch carry a gradient, so memory stays flat. The planner in the notebook depends on this.
+Look at the grey curve. It was trained on 3 to 10 steps and falls apart after about 20. The orange one still holds at 400. Only the last 6 steps of the long run get a gradient, so memory does not grow. The live planner in the notebook relies on this.
 
 **5. Keep the environment out of the model's reach** (60 s)
 
-The drift numbers come from the 3-D surrogate of my PhD codebase, which did not restore its conditioning. Sparse channels, the plan, are the ones that get erased. The payoff is the live planner in the hands-on.
+The drift numbers are from the 3-D surrogate in my PhD code, which did not restore its inputs. The sparse channels, the needle and the power, are the ones that vanish first. The picture is that 3-D setting, rendered from the solver. You will see the payoff in the live planner.
 
 **6. Scratch channels are where the model computes** (50 s)
 
-Everything we tried on the loss first left the vessel head pinned. Width moved both heads at once. 16 channels is the knee; 24 buys little.
+Everything I tried on the loss first left the vessel output stuck. Adding width moved both outputs at once. 16 channels is where it levels off, and 24 adds very little.
 
 **7. Check the share, not the weight** (60 s)
 
-This was one of the largest effects in the whole project and it was a hyperparameter nobody looked at. In the notebook the room prints these shares on their own model.
+This was one of the biggest effects in the whole project, and it came from a hyperparameter nobody looked at. In the notebook, everyone prints these shares for their own model.
 
 **8. Two knobs that are free after training** (60 s)
 
-K: the cheapest within 1 % of the best, chosen on validation, never on test. The threshold one is fresh: we reported the vessel head at a grid edge for weeks. The weighted BCE makes the head over-confident, so its best threshold is high.
+For K, take the smallest one within 1 % of the best, chosen on validation, never on test. The threshold one is recent: for weeks we reported the vessel output at the edge of the search grid. The weighted loss makes that output over-confident, so its best threshold ends up high.
 
-**9. Things we measured wrong** (70 s)
+**9. Things that did not work for us** (70 s)
 
-Pick two aloud: augmentation, and the bf16 one because it silently hit the Colab runs of this very notebook until this week. The fire mask is the one people will ask about: same 5-minute budget, three seeds each, necrosis DSC 0.818 to 0.831 as well.
+Talk through two of them: augmentation, and bf16, because it quietly slowed down the Colab runs of this exact notebook until recently. People will ask about the fire mask: same 5-minute budget, three seeds each, and necrosis DSC also went from 0.818 to 0.831.
 
 **10. Freeze what the plan must not touch** (55 s)
 
-This came out of a robustness audit this week: move the needle and the vessel map changed. Pinning the necrosis channel alone was not enough, the plan leaks through the scratch channels. The general rule: whatever must not depend on an input, compute it before that input exists, then treat it as environment.
+This came out of a robustness check: move the needle and the vessel map changed. Freezing the necrosis channel alone was not enough, because the plan leaked in through the scratch channels. The general idea: if something must not depend on an input, compute it before that input exists, then treat it as part of the environment.
 
 **11. Hands-on 3: train one in five minutes** (50 s)
 
-This is the model running live in the browser. Drag the needle next to a vessel: the lesion is notched. Then: scan the code, T4 GPU, run the first cell.
+This is the model running live in the browser. Drag the needle next to a vessel and the burn gets a notch where the vessel carries the heat away. Then: scan the code, pick a T4 GPU, and run the first cell.
 
 ## Questions to expect
 
-- *Is this validated?* No. The device calibration behind every label is provisional: ex vivo bovine liver at 17 °C, held-out error 9.9 %.
-- *Why 2-D?* Because it trains in five minutes on a free GPU. The 3-D model uses the same channels, device and loss.
-- *Could I use it clinically?* No: a 2-D surrogate of a provisionally calibrated solver.
-- *Two phases, is that still one NCA?* Yes: same rule, same weights, run first with the needle channels empty and then with them on. It is the environment trick applied to an output: whatever must not depend on an input is computed before that input exists.
-- *Why no fire mask?* Measured: without it both heads are better in the same budget and the model is deterministic, so one rollout is the answer.
+- *Is this validated?* No. The device calibration behind the labels is still provisional (ex vivo bovine liver at 17 °C, 9.9 % error on held-out data).
+- *Why 2-D?* So it trains in five minutes on a free GPU. The 3-D model uses the same channels, device and loss.
+- *Could I use it clinically?* No. It is a 2-D surrogate of a solver whose calibration is still provisional.
+- *Two phases, is that still one NCA?* Yes. Same rule, same weights: it runs first with the needle channels empty, then with them on. It is the environment trick applied to an output.
+- *Why no fire mask?* We measured it. Without it both outputs are better for the same budget, and the model is deterministic, so a single rollout is enough.
